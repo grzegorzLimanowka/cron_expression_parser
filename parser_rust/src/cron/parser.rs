@@ -1,38 +1,37 @@
-use std::{f32::DIGITS, str::FromStr};
+use std::ops::Range;
+
 use thiserror::Error;
 
-use super::token::Token;
+use super::{token::Token, AllowedValues, Value};
 
-// use token::Token;
-
-// Based on :
 // https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm
 
 #[derive(Error, Debug)]
-pub enum CronParseError {
+pub enum ParseError {
     #[error("Invalid Token while parsing cron value line: {0}")]
     InvalidToken(char),
-    // #[error("Invalid arg count, Expected {ARG_COUNT}, expected {0}")]
-    // InvalidArgCount(usize),
 }
 
-pub struct CronJobParser {}
+pub struct Parser {}
 
-impl CronJobParser {
-    // Sample input: ["*/15", "0", "1,15", "*", "1-5"]
+// Sample input: ["*/15", "0", "1,15", "*", "1-5"]
+impl Parser {
+    pub fn parse(input: Vec<String>) -> Result<(), ParseError> {
+        let minutes = input.get(0).unwrap();
 
-    pub fn parse(input: Vec<String>) -> Result<(), CronParseError> {
-        println!("{:?}", input);
+        // "*/15"
+        let tokens = SubExpressionParser::parse(&minutes)?;
 
         Ok(())
     }
 }
 
-pub struct CronLineParser {}
+// Parses single line into vec of tokens
+pub struct SubExpressionParser {} // -> TokenParser?
 
-impl CronLineParser {
+impl SubExpressionParser {
     // 1-12 -> vec![Token::Value(1), Token::Dash, Token::Value(12)]
-    pub fn parse(input: &str) -> Result<Vec<Token>, CronParseError> {
+    pub fn parse(input: &str) -> Result<Vec<Token>, ParseError> {
         let mut tokens = vec![];
         let mut last_digits: Vec<char> = vec![];
 
@@ -64,12 +63,20 @@ impl CronLineParser {
     }
 }
 
+pub struct SubExpressionValidator {}
+
+// impl SubExpressionValidator {
+//     pub fn validate(input: Vec<Token>, )
+// }
+
+// pub struct Val
+
 #[cfg(test)]
 mod tests {
     use crate::cron::token::Token;
     use rstest::rstest;
 
-    use super::CronLineParser;
+    use super::SubExpressionParser;
 
     #[rstest]
     #[case["1-12", vec![Token::Value(1), Token::Dash, Token::Value(12)]]]
@@ -78,7 +85,23 @@ mod tests {
     #[case["1,19", vec![Token::Value(1), Token::Comma, Token::Value(19)]]]
     #[case["*", vec![Token::Asterisk]]]
     #[test]
-    fn parse_cron_line(#[case] input: &str, #[case] output: Vec<Token>) {
-        assert_eq!(CronLineParser::parse(input).unwrap(), output);
+    fn parse_sub_expression(#[case] input: &str, #[case] output: Vec<Token>) {
+        assert_eq!(SubExpressionParser::parse(input).unwrap(), output);
     }
+}
+
+// TODO: Finish these traits:
+
+// Trait for parsing tokens
+trait ITokenParser {
+    type Error;
+
+    fn parse(&self) -> Result<Vec<Token>, Self::Error>;
+}
+
+// Trait for valdating tokens
+trait ITokenValidator {
+    type Error;
+
+    fn validate(&self, tokens: Vec<Token>, allowed: AllowedValues) -> Result<Value, Self::Error>;
 }

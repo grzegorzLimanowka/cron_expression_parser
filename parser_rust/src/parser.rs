@@ -13,7 +13,6 @@ pub enum ArgParserError {
 }
 
 pub struct ArgParser {
-    // Raw full command: cron params + file to execute
     cron: Vec<String>,
     task: String,
 }
@@ -24,8 +23,6 @@ impl ArgParser {
         match args.len() {
             1 => Err(ArgParserError::ZeroArgumentsProvided),
             2 => {
-                // let parts: Vec<String> = args[1].split_at(par)
-
                 let parts: Vec<String> = args[1].split(" ").map(|v| v.to_string()).collect();
 
                 if parts.len() != ARG_COUNT {

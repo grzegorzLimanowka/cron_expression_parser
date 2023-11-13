@@ -1,9 +1,9 @@
-use super::parser::CronParseError;
+use super::parser::ParseError;
 
 /// Single Token found in cron value
 #[derive(Eq, PartialEq, Debug)]
 pub enum Token {
-    Value(usize), // 4
+    Value(usize), // 0-9
     Comma,        // ,
     Dash,         // -
     Asterisk,     // *
@@ -24,7 +24,7 @@ impl Token {
 }
 
 impl TryFrom<char> for Token {
-    type Error = CronParseError;
+    type Error = ParseError;
 
     fn try_from(v: char) -> Result<Self, Self::Error> {
         match v {
@@ -33,7 +33,7 @@ impl TryFrom<char> for Token {
             '*' => Ok(Token::Asterisk),
             '/' => Ok(Token::Slash),
             '0'..='9' => Ok(Token::Value(v.to_digit(10).unwrap() as usize)),
-            _ => Err(CronParseError::InvalidToken(v)),
+            _ => Err(ParseError::InvalidToken(v)),
         }
     }
 }
