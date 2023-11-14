@@ -22,7 +22,6 @@ pub enum ParseError {
 
 pub struct Parser {}
 
-// Sample input: ["*/15", "0", "1,15", "*", "1-5"]
 impl Parser {
     pub fn parse(input: Vec<String>, command: String) -> Result<CronExpression, ParseError> {
         let mut expression_tokens = vec![];
@@ -61,11 +60,13 @@ impl Parser {
     }
 }
 
-// Parses single line into vec of tokens
-pub struct SubExpressionParser {} // -> TokenParser?
+/// SubExpression parser. Used for parsing single sub expressions
+/// into vec of tokens
+///
+/// I: "1-9" -> O: [Token::Value(1), Token::Dash, Token::Value(9)]
+pub struct SubExpressionParser {}
 
 impl SubExpressionParser {
-    // 1-12 -> vec![Token::Value(1), Token::Dash, Token::Value(12)]
     pub fn parse(input: &str) -> Result<Vec<Token>, ParseError> {
         let mut tokens = vec![];
         let mut last_digits: Vec<char> = vec![];
@@ -122,8 +123,6 @@ impl SubExpressionValidator {
         Ok(())
     }
 }
-
-// pub struct Val
 
 #[cfg(test)]
 mod tests {

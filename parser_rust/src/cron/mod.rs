@@ -8,7 +8,6 @@ use self::{parser::ParseError, token::Token};
 pub mod parser;
 pub mod token;
 
-/// Full info about single Cron Job
 pub struct CronExpression {
     minutes: Value,
     hours: Value,
@@ -178,8 +177,6 @@ impl Value {
             return Err(ParseError::ExpectedTokenStackEmpty(stack.len()));
         }
 
-        // println!("{:?}", ticks);
-
         // filtered: [1, 2, 3, 4] -> (range: (1, 3)) -> [1, 2, 3]
         Ok(ticks
             .into_keys()
@@ -190,8 +187,7 @@ impl Value {
     }
 }
 
-// TODO: Impl operations on Tokens
-
+// TODO: Impl Operator overloading on Tokens
 pub enum Kind {
     Minutes,
     Hours,
