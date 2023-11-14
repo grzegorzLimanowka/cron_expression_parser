@@ -9,6 +9,18 @@ Fields, that are taken into consideration are:
 minute, hour, day_of_month, month, day_of_week, command
 ```
 
+## Run
+
+To run this example, you have to have installed Rust (Ideally with Cargo package manager)
+
+Assuming you have cargo, to run application just run:
+
+```shell
+cd parser_rust
+
+cargo run "*/15 0 1,15 * 1-5 /usr/bin/find"
+```
+
 ## Input
 
 The cron string will be passed to application as a single argument.
@@ -27,14 +39,6 @@ hour            0
 day of month    1 15
 month:          1 2 3 4 5 6 7 8 9 10 11 12
 command:        /usr/bin/find
-```
-
-## Run
-
-To run this parser all you need is to write:
-
-```shell
-TODO
 ```
 
 ### Note
