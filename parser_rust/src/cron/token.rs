@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::parser::ParseError;
+use super::{parser::ParseError, ValidValues};
 
 /// Single Token found in cron value
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -10,6 +10,7 @@ pub enum Token {
     Dash,         // -
     Asterisk,     // *
     Slash,        // /
+                  // TODO: Add more tokens in future
 }
 
 impl Display for Token {
@@ -33,6 +34,19 @@ impl Token {
             (Token::Slash, Token::Value(_)) => true,
             (Token::Slash, _) => false,
         }
+    }
+
+    pub fn validate(&self, valid: &ValidValues) -> bool {
+        match &self {
+            Token::Value(v) => {
+                if v < &valid.range.start || v > &valid.range.end {
+                    return false;
+                }
+            }
+            _ => {} // TODO: Add validation of text tokens in future
+        }
+
+        true
     }
 }
 

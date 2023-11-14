@@ -7,7 +7,7 @@ pub mod parser;
 pub mod token;
 
 /// Full info about single Cron Job
-pub struct Expression {
+pub struct CronExpression {
     minute: Value,
     hour: Value,
     day_of_month: Value,
@@ -41,25 +41,25 @@ pub enum Kind {
 
 impl Kind {
     // returns default range of allowed values
-    pub fn default_allowed(&self) -> AllowedValues {
+    pub fn default_allowed(&self) -> ValidValues {
         match &self {
-            Kind::Minutes => AllowedValues {
+            Kind::Minutes => ValidValues {
                 range: Range { start: 0, end: 59 },
                 text: false,
             },
-            Kind::Hours => AllowedValues {
+            Kind::Hours => ValidValues {
                 range: Range { start: 0, end: 59 },
                 text: false,
             },
-            Kind::DayOfMonth => AllowedValues {
+            Kind::DayOfMonth => ValidValues {
                 range: Range { start: 0, end: 23 },
                 text: false,
             },
-            Kind::Month => AllowedValues {
+            Kind::Month => ValidValues {
                 range: Range { start: 1, end: 31 },
                 text: false,
             },
-            Kind::DayOfWeek => AllowedValues {
+            Kind::DayOfWeek => ValidValues {
                 range: Range { start: 0, end: 11 },
 
                 text: false,
@@ -68,7 +68,7 @@ impl Kind {
     }
 }
 
-pub struct AllowedValues {
+pub struct ValidValues {
     // range of numeric values
     range: Range<usize>,
 

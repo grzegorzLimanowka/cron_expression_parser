@@ -2,7 +2,10 @@ use std::ops::Range;
 
 use thiserror::Error;
 
-use super::{token::Token, AllowedValues, Value};
+use super::{
+    token::{self, Token},
+    CronExpression, Kind, ValidValues, Value,
+};
 
 // https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm
 
@@ -12,19 +15,27 @@ pub enum ParseError {
     InvalidToken(char),
     #[error("This sequence of tokens is invalid: {0} -> {1}")]
     WrongTokenOrder(Token, Token),
+    #[error("Validation was no correct")]
+    ValidationError,
 }
 
 pub struct Parser {}
 
 // Sample input: ["*/15", "0", "1,15", "*", "1-5"]
 impl Parser {
-    pub fn parse(input: Vec<String>) -> Result<(), ParseError> {
-        let minutes = input.get(0).unwrap();
+    pub fn parse(input: Vec<String>) -> Result<CronExpression, ParseError> {
+        // let expression_tokens: Vec<_> = vec![];
 
-        // "*/15"
-        let tokens = SubExpressionParser::parse(&minutes)?;
+        for expr in input {
+            let tokens: Vec<Token> = SubExpressionParser::parse(&expr)?;
+            let validated =
+                SubExpressionValidator::validate(&tokens, Some(&Kind::Minutes.default_allowed()))?;
 
-        Ok(())
+            // expression_tokens.push(tokens);
+        }
+
+        todo!()
+        // Ok(())
     }
 }
 
@@ -68,9 +79,18 @@ impl SubExpressionParser {
 pub struct SubExpressionValidator {}
 
 impl SubExpressionValidator {
-    pub fn validate(input: Vec<Token>, allowed: Option<AllowedValues>) -> Result<(), ParseError> {
+    pub fn validate(input: &Vec<Token>, allowed: Option<&ValidValues>) -> Result<(), ParseError> {
         for i in 0..input.len() - 1 {
             let (curr, next) = (input.get(i).unwrap(), input.get(i + 1).unwrap());
+
+            match allowed {
+                Some(validate) => {
+                    if curr.validate(validate) == false {
+                        return Err(ParseError::ValidationError);
+                    }
+                }
+                None => {}
+            };
 
             if !curr.check(next) {
                 return Err(ParseError::WrongTokenOrder(curr.clone(), next.clone()));
@@ -113,7 +133,7 @@ mod tests {
         #[case] input: Vec<Token>,
         #[case] output: Result<(), super::ParseError>,
     ) {
-        assert_eq!(SubExpressionValidator::validate(input, None), output);
+        assert_eq!(SubExpressionValidator::validate(&input, None), output);
     }
 }
 
@@ -130,5 +150,5 @@ trait ITokenParser {
 trait ITokenValidator {
     type Error;
 
-    fn validate(&self, tokens: Vec<Token>, allowed: AllowedValues) -> Result<Value, Self::Error>;
+    fn validate(&self, tokens: Vec<Token>, allowed: ValidValues) -> Result<Value, Self::Error>;
 }
