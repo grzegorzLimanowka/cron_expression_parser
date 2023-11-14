@@ -1,7 +1,9 @@
+use std::fmt::Display;
+
 use super::parser::ParseError;
 
 /// Single Token found in cron value
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Token {
     Value(usize), // 0-9
     Comma,        // ,
@@ -10,15 +12,26 @@ pub enum Token {
     Slash,        // /
 }
 
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl Token {
-    // lists all Tokens, that are allowed after current one
-    pub fn allowed(&self) -> Vec<Token> {
-        match &self {
-            Token::Value(_) => vec![Token::Comma, Token::Dash, Token::Slash],
-            Token::Comma => vec![Token::Value(0)],
-            Token::Dash => vec![Token::Value(0)],
-            Token::Asterisk => vec![Token::Slash],
-            Token::Slash => vec![Token::Value(0)],
+    // compare 2 tokens and decide whether next token is valid against self
+    pub fn check(&self, next: &Token) -> bool {
+        match (&self, next) {
+            (Token::Value(_), Token::Comma | Token::Dash | Token::Slash) => true,
+            (Token::Value(_), Token::Value(_) | Token::Asterisk) => false,
+            (Token::Comma, Token::Value(_)) => true,
+            (Token::Comma, _) => false,
+            (Token::Dash, Token::Value(_)) => true,
+            (Token::Dash, _) => false,
+            (Token::Asterisk, Token::Slash) => true,
+            (Token::Asterisk, _) => false,
+            (Token::Slash, Token::Value(_)) => true,
+            (Token::Slash, _) => false,
         }
     }
 }

@@ -6,10 +6,12 @@ use super::{token::Token, AllowedValues, Value};
 
 // https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ParseError {
     #[error("Invalid Token while parsing cron value line: {0}")]
     InvalidToken(char),
+    #[error("This sequence of tokens is invalid: {0} -> {1}")]
+    WrongTokenOrder(Token, Token),
 }
 
 pub struct Parser {}
@@ -65,9 +67,19 @@ impl SubExpressionParser {
 
 pub struct SubExpressionValidator {}
 
-// impl SubExpressionValidator {
-//     pub fn validate(input: Vec<Token>, )
-// }
+impl SubExpressionValidator {
+    pub fn validate(input: Vec<Token>, allowed: Option<AllowedValues>) -> Result<(), ParseError> {
+        for i in 0..input.len() - 1 {
+            let (curr, next) = (input.get(i).unwrap(), input.get(i + 1).unwrap());
+
+            if !curr.check(next) {
+                return Err(ParseError::WrongTokenOrder(curr.clone(), next.clone()));
+            }
+        }
+
+        Ok(())
+    }
+}
 
 // pub struct Val
 
@@ -77,6 +89,7 @@ mod tests {
     use rstest::rstest;
 
     use super::SubExpressionParser;
+    use super::SubExpressionValidator;
 
     #[rstest]
     #[case["1-12", vec![Token::Value(1), Token::Dash, Token::Value(12)]]]
@@ -87,6 +100,20 @@ mod tests {
     #[test]
     fn parse_sub_expression(#[case] input: &str, #[case] output: Vec<Token>) {
         assert_eq!(SubExpressionParser::parse(input).unwrap(), output);
+    }
+
+    #[rstest]
+    #[case[vec![Token::Value(1), Token::Dash, Token::Value(12)], Ok(())]]
+    #[case[vec![Token::Asterisk, Token::Comma, Token::Value(15)], Err(crate::cron::parser::ParseError::WrongTokenOrder(Token::Asterisk, Token::Comma))]]
+    #[case[vec![Token::Value(0)], Ok(())]]
+    #[case[vec![Token::Value(1), Token::Comma, Token::Value(19)], Ok(())]]
+    #[case[vec![Token::Asterisk], Ok(())]]
+    #[test]
+    fn validate_sub_expression(
+        #[case] input: Vec<Token>,
+        #[case] output: Result<(), super::ParseError>,
+    ) {
+        assert_eq!(SubExpressionValidator::validate(input, None), output);
     }
 }
 
