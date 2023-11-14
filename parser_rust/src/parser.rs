@@ -14,7 +14,7 @@ pub enum ArgParserError {
 
 pub struct ArgParser {
     cron: Vec<String>,
-    task: String,
+    command: String,
 }
 
 impl ArgParser {
@@ -29,13 +29,13 @@ impl ArgParser {
                     return Err(ArgParserError::InvalidArgCount(parts.len()));
                 }
 
-                let (cron, task) = parts.split_at(parts.len() - 1);
+                let (cron, command) = parts.split_at(parts.len() - 1);
 
-                println!("{:?} {:?}", cron, task);
+                println!("{:?} {:?}", cron, command);
 
                 Ok(Self {
                     cron: cron.to_owned(),
-                    task: task.concat(),
+                    command: command.concat(),
                 })
             }
             _ => Err(ArgParserError::TwoOrMoreArgumentProvided),
@@ -46,7 +46,7 @@ impl ArgParser {
         self.cron.clone()
     }
 
-    pub fn task(&self) -> String {
-        self.task.clone()
+    pub fn command(&self) -> String {
+        self.command.clone()
     }
 }

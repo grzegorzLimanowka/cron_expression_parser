@@ -1,11 +1,6 @@
-use std::ops::Range;
-
 use thiserror::Error;
 
-use super::{
-    token::{self, Token},
-    CronExpression, Kind, ValidValues, Value,
-};
+use super::{token::Token, CronExpression, Kind, ValidValues, Value};
 
 // https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm
 
@@ -17,25 +12,52 @@ pub enum ParseError {
     WrongTokenOrder(Token, Token),
     #[error("Validation was no correct")]
     ValidationError,
+    #[error("Expected token {0}, but not found")]
+    ExpectedToken(Token),
+    #[error("Token stack not empty, nr of elems in stack: {0}")]
+    ExpectedTokenStackEmpty(usize),
+    #[error("Token stack not empty, nr of elems in stack: {0}")]
+    RemainingTokenUnexpected(Token),
 }
 
 pub struct Parser {}
 
 // Sample input: ["*/15", "0", "1,15", "*", "1-5"]
 impl Parser {
-    pub fn parse(input: Vec<String>) -> Result<CronExpression, ParseError> {
-        // let expression_tokens: Vec<_> = vec![];
+    pub fn parse(input: Vec<String>, command: String) -> Result<CronExpression, ParseError> {
+        let mut expression_tokens = vec![];
 
         for expr in input {
             let tokens: Vec<Token> = SubExpressionParser::parse(&expr)?;
-            let validated =
-                SubExpressionValidator::validate(&tokens, Some(&Kind::Minutes.default_allowed()))?;
+            let _ =
+                SubExpressionValidator::validate(&tokens, Some(&Kind::Minutes.valid_defaults()))?;
 
-            // expression_tokens.push(tokens);
+            expression_tokens.push(tokens);
         }
 
-        todo!()
-        // Ok(())
+        Ok(CronExpression {
+            minutes: Value {
+                kind: Kind::Minutes,
+                value: expression_tokens[0].to_owned(),
+            },
+            hours: Value {
+                kind: Kind::Hours,
+                value: expression_tokens[1].to_owned(),
+            },
+            day_of_month: Value {
+                kind: Kind::DayOfMonth,
+                value: expression_tokens[2].to_owned(),
+            },
+            month: Value {
+                kind: Kind::Month,
+                value: expression_tokens[3].to_owned(),
+            },
+            day_of_week: Value {
+                kind: Kind::DayOfWeek,
+                value: expression_tokens[4].to_owned(),
+            },
+            command,
+        })
     }
 }
 
@@ -137,7 +159,7 @@ mod tests {
     }
 }
 
-// TODO: Finish these traits:
+// TODO: Finish these traits in future:
 
 // Trait for parsing tokens
 trait ITokenParser {
